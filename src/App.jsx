@@ -1,10 +1,13 @@
-import { useState } from 'react'
+
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
-
+import {ChartColumnDecreasing} from 'lucide-react';
+import {Ban} from 'lucide-react';
+import {CirclePause} from 'lucide-react';
+import Time from './Time';
 function App() {
-  const [count, setCount] = useState(0)
+  
 
   return (
     <>
@@ -17,17 +20,23 @@ function App() {
         </a>
       </div>
       <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
+        <Time />
+
+
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>
+      <div class="flex justify-between  mt-4">
+      <button>
+      <ChartColumnDecreasing />
+      </button>
+      <button>
+        <Ban />
+      </button>
+      <button>
+       <CirclePause />
+      </button>
+</div>
     </>
   )
 }
