@@ -13,8 +13,10 @@ export default defineConfig({
         dest: '.',
          src: 'public/background.js',
           dest: '.', // copies to `build/`
-      }
-        
+      
+       src: 'public/content.js',
+          dest: '.', // copies to `build/`
+      } 
 
 
       ],

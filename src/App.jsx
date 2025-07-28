@@ -5,7 +5,7 @@ import './App.css'
 import {ChartColumnDecreasing} from 'lucide-react';
 import {Ban} from 'lucide-react';
 import {CirclePause} from 'lucide-react';
-import Time from './Time';
+import StatsPage from './Time';
 function App() {
   
 
@@ -20,7 +20,7 @@ function App() {
         </a>
       </div>
       <h1>Vite + React</h1>
-        <Time />
+        <StatsPage />
 
 
       <p className="read-the-docs">
