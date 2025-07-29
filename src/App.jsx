@@ -1,44 +1,25 @@
-
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import {ChartColumnDecreasing} from 'lucide-react';
-import {Ban} from 'lucide-react';
-import {CirclePause} from 'lucide-react';
-import StatsPage from './Time';
+import "./App.css";
+import { ChartColumnDecreasing } from "lucide-react";
+import { Ban } from "lucide-react";
+import { CirclePause } from "lucide-react";
+import StatsPage from "./Time";
 function App() {
-  
-
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <StatsPage />
+      <div className="flex justify-between mt-4 gap-2">
+        <button className="bg-emerald-950 p-2 rounded-md hover:ring  hover:ring-white hover:opacity-80">
+          <ChartColumnDecreasing className="text-amber-50 w-5 h-5" />
+        </button>
+        <button className="bg-gray-700 p-2 rounded-md hover:ring hover:ring-white hover:opacity-80">
+          <Ban className="text-white w-5 h-5" />
+        </button>
+        <button className="bg-blue-700 p-2 rounded-md hover:ring hover:ring-white hover:opacity-80">
+          <CirclePause className="text-white w-5 h-5" />
+        </button>
       </div>
-      <h1>Vite + React</h1>
-        <StatsPage />
-
-
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-      <div class="flex justify-between  mt-4">
-      <button>
-      <ChartColumnDecreasing />
-      </button>
-      <button>
-        <Ban />
-      </button>
-      <button>
-       <CirclePause />
-      </button>
-</div>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

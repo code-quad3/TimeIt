@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
+import FlipCard from "./components/FlipCard";
 
-function formatTime(seconds) {
+function formatTimeParts(seconds) {
   const hrs = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
-  return `${hrs.toString().padStart(2, "0")}h ${mins.toString().padStart(2, "0")}m`;
+  return {
+    hours: hrs.toString().padStart(2, "0"),
+    minutes: mins.toString().padStart(2, "0"),
+  };
 }
 
 export default function StatsPage() {
@@ -22,10 +26,16 @@ export default function StatsPage() {
     return () => clearInterval(interval);
   }, []);
 
+  const { hours, minutes } = formatTimeParts(todaySeconds);
+
   return (
     <div className="text-center mt-4">
-      <h2 className="text-lg font-bold">Total Time Spent Today</h2>
-      <p className="text-3xl">{formatTime(todaySeconds)}</p>
+      <h2 className="text-lg font-bold mb-4">Total Time Spent Today</h2>
+      <div className="flex justify-center gap-4">
+        <FlipCard value={hours} />
+        <FlipCard value={minutes} />
+      </div>
+      <p className="mt-2 text-sm">Hours : Minutes</p>
     </div>
   );
 }
