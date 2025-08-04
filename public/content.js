@@ -1,140 +1,99 @@
+// content.js
+
 let seconds = 0;
+let iconFetched = false;
 
 function getDomainName(hostname) {
-  // Reverted to more robust domain name extraction
-  const parts = hostname.replace(/^www\./, "").split(".");
-  if (
-    parts.length > 2 &&
-    ["com", "org", "net", "gov", "edu", "co"].includes(parts[parts.length - 2])
-  ) {
-    return parts[parts.length - 3];
-  }
-  return parts[0];
+    const parts = hostname.replace(/^www\./, "").split(".");
+    if (parts.length > 2) {
+        const tld = parts.pop();
+        const secondLevel = parts.pop();
+        if (["com", "org", "net", "gov", "edu", "co"].includes(tld)) {
+            return parts.length > 0 ? parts.pop() + "." + secondLevel + "." + tld : secondLevel + "." + tld;
+        }
+        return secondLevel + "." + tld;
+    }
+    return hostname;
 }
 
 function getFaviconUrl() {
-  const links = document.querySelectorAll('link[rel~="icon"]');
-  if (links.length > 0) return links[0].href;
-  return `${location.origin}/favicon.ico`; // fallback
+    const links = document.querySelectorAll('link[rel~="icon"]');
+    if (links.length > 0) return links[0].href;
+    return `${location.origin}/favicon.ico`;
 }
 
-// Keep the interval at 1 second for time tracking, but fetch icon less frequently
-const timeUpdateInterval = 1000; // Update time every 1 second
-const iconFetchInterval = 10000; // Fetch icon every 10 seconds
+// Single interval for all updates
+const updateInterval = 1000; // 1 second
+const iconFetchInterval = 60; // Fetch icon once every 60 seconds (60 * 1000ms)
 
-// --- DEBUG: Confirm content script is loaded and running ---
+let intervalCounter = 0;
+
 console.log("Content script loaded on:", window.location.href);
 
-setInterval(() => {
-  seconds++; // This 'seconds' variable isn't used for cumulative time in the message, just as a local counter.
-  const now = new Date();
-  const date = now.toISOString().split("T")[0];
-  const week = `${now.getFullYear()}-W${Math.ceil(
-    ((now - new Date(now.getFullYear(), 0, 1)) / 86400000 + now.getDay() + 1) /
-      7
-  )}`;
-  const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-    2,
-    "0"
-  )}`;
-
-  const domain = getDomainName(location.hostname);
-
-  // Send regular time update (every 1 second)
-  browser.runtime
-    .sendMessage({
-      action: "updateTime",
-      date,
-      seconds: 1, // Sending 1 second for each interval
-    })
-    .then(() => {
-      // --- DEBUG: Confirm message sent successfully ---
-      console.log(`[content.js] Sent 'updateTime': date=${date}, seconds=1`);
-    })
-    .catch((error) => {
-      // --- DEBUG: Log errors if message fails to send ---
-      console.error(`[content.js] Error sending 'updateTime' message:`, error);
-    });
-}, timeUpdateInterval);
-
-// Separate interval for fetching and sending favicon (less frequent)
 setInterval(async () => {
-  const now = new Date();
-  const date = now.toISOString().split("T")[0];
-  const week = `${now.getFullYear()}-W${Math.ceil(
-    ((now - new Date(now.getFullYear(), 0, 1)) / 86400000 + now.getDay() + 1) /
-      7
-  )}`;
-  const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-    2,
-    "0"
-  )}`;
-
-  const domain = getDomainName(location.hostname);
-  const faviconUrl = getFaviconUrl();
-
-  // --- DEBUG: Log favicon fetch attempt ---
-  console.log(
-    `[content.js] Attempting to fetch favicon for domain: ${domain} from URL: ${faviconUrl}`
-  );
-
-  try {
-    const response = await fetch(faviconUrl);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    const now = new Date();
+    const date = now.toISOString().split("T")[0];
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+    const week = `${now.getFullYear()}-W${Math.ceil(((now - yearStart) / 86400000 + yearStart.getDay() + 1) / 7)}`;
+    const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const domain = getDomainName(location.hostname);
+    
+    let icon = null;
+    
+    // Only attempt to fetch the icon if it hasn't been fetched in this session or if it's time for a refresh
+    if (!iconFetched || intervalCounter % iconFetchInterval === 0) {
+        console.log(`[content.js] Attempting to fetch favicon for domain: ${domain}`);
+        try {
+            const faviconUrl = getFaviconUrl();
+            const response = await fetch(faviconUrl);
+            if (response.ok) {
+                const blob = await response.blob();
+                const arrayBuffer = await blob.arrayBuffer();
+                icon = Array.from(new Uint8Array(arrayBuffer));
+                iconFetched = true;
+                console.log(`[content.js] Successfully fetched favicon for ${domain}.`);
+            } else {
+                console.warn(`[content.js] Could not fetch favicon for ${domain}: HTTP error! status: ${response.status}`);
+            }
+        } catch (error) {
+            console.warn(`[content.js] Failed to fetch favicon for ${domain}:`, error);
+        }
     }
-    const blob = await response.blob();
-    const arrayBuffer = await blob.arrayBuffer();
 
+    // Send a single, comprehensive message to the background script
     browser.runtime
-      .sendMessage({
-        action: "updateDomainTimeWithIcon", // Action for icons
-        domain,
-        date,
-        week,
-        month,
-        seconds: 1, // Sending 1 second for each interval (can be adjusted)
-        icon: Array.from(new Uint8Array(arrayBuffer)), // convert to transferable format
-        updatedAt: Date.now(),
-      })
-      .then(() => {
-        // --- DEBUG: Confirm message sent successfully ---
-        console.log(
-          `[content.js] Sent 'updateDomainTimeWithIcon' for domain: ${domain} (with icon)`
-        );
-      })
-      .catch((error) => {
-        console.error(
-          `[content.js] Error sending 'updateDomainTimeWithIcon' message with icon:`,
-          error
-        );
-      });
-  } catch (error) {
-    // --- DEBUG: Log favicon fetch failure ---
-    console.warn(`[content.js] Could not fetch favicon for ${domain}:`, error);
+        .sendMessage({
+            action: "updateDomainTimeWithIcon",
+            domain,
+            date,
+            week,
+            month,
+            seconds: 1, // Always send 1 second per interval
+            icon, // Can be null if fetching failed or not time to fetch
+        })
+        .then(() => {
+            console.log(`[content.js] Sent 'updateDomainTimeWithIcon' message for ${domain}.`);
+        })
+        .catch((error) => {
+            console.error(`[content.js] Error sending message to background script:`, error);
+        });
 
-    // Even if favicon fails, send a regular domain time update
+    // Also send a general time update (this is for total time, independent of domain)
     browser.runtime
-      .sendMessage({
-        action: "updateDomainTimeWithIcon", // Keep the same action for background script consistency
-        domain,
-        date,
-        week,
-        month,
-        seconds: 1,
-        updatedAt: Date.now(),
-      })
-      .then(() => {
-        // --- DEBUG: Confirm message sent successfully (without icon) ---
-        console.log(
-          `[content.js] Sent 'updateDomainTimeWithIcon' for domain: ${domain} (without icon, due to fetch error)`
-        );
-      })
-      .catch((error) => {
-        console.error(
-          `[content.js] Error sending 'updateDomainTimeWithIcon' message without icon:`,
-          error
-        );
-      });
-  }
-}, iconFetchInterval);
+        .sendMessage({
+            action: "updateTime",
+            date,
+            week,
+            month,
+            seconds: 1,
+        })
+        .then(() => {
+            console.log(`[content.js] Sent 'updateTime' message.`);
+        })
+        .catch((error) => {
+            console.error(`[content.js] Error sending 'updateTime' message:`, error);
+        });
+
+    intervalCounter++;
+
+}, updateInterval);

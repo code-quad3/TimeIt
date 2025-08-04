@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import FlipCard from "./components/FlipCard";
+import FlipCard from "../components/FlipCard";
 
 function formatTimeParts(seconds) {
   const hrs = Math.floor(seconds / 3600);
@@ -17,8 +17,12 @@ export default function StatsPage() {
     const today = new Date().toISOString().split("T")[0];
 
     const fetchTime = async () => {
+      // Get the entire timeData object
       const data = await browser.runtime.sendMessage({ action: "getTime" });
-      setTodaySeconds(data[today] || 0);
+      
+      // Access the correct nested property for today's time
+      // The new structure is timeData.daily[today]
+      setTodaySeconds(data.daily[today] || 0);
     };
 
     fetchTime();
