@@ -1,33 +1,44 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-import {viteStaticCopy} from 'vite-plugin-static-copy';
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
-// https://vite.dev/config/
+// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()
-    ,tailwindcss(),
+  plugins: [
+    react(),
+    tailwindcss(),
     viteStaticCopy({
-      targets:[{
-        src: 'public/manifest.json',
-        dest: '.',
-         src: 'public/background.js',
-          dest: '.', // copies to `build/`
-      
-       src: 'public/content.js',
-          dest: '.', // copies to `build/`
-      } 
-
-
+      targets: [
+        {
+          src: 'public/manifest.json',
+          dest: '.',
+        },
+        {
+          src: 'public/background.js',
+          dest: '.',
+        },
+        {
+          src: 'public/content.js',
+          dest: '.',
+        },
       ],
-    })
+    }),
   ],
   build: {
-    outDir:'build',
+    outDir: 'build',
     rollupOptions: {
       input: {
-        main: './index.html'
-      }
-    }
-  }
+        // Define both entry points here, pointing to the root directory
+        popup: 'index.html',
+        stats: 'stats.html',
+      },
+      output: {
+        // This ensures the entry files have clean names and are placed correctly
+        entryFileNames: `assets/[name].js`,
+        chunkFileNames: `assets/[name]-[hash].js`,
+        assetFileNames: `assets/[name].[ext]`,
+      },
+    },
+  },
 });
