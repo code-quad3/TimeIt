@@ -42,14 +42,15 @@ export async function openFaviconDB() {
 }
 
 // Favicon operations
-export async function saveFavicon(domain, iconArray) {
+export async function saveFavicon(domain, iconBase64) {
     if (!db) await openFaviconDB();
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([FAVICON_STORE], "readwrite");
         const store = transaction.objectStore(FAVICON_STORE);
         const request = store.put({
             domain,
-            icon: iconArray,
+            // Now we save the Base64 string directly
+            icon: iconBase64,
             updatedAt: Date.now(),
         });
         request.onsuccess = () => {
@@ -71,6 +72,7 @@ export async function getFavicon(domain) {
         const request = store.get(domain);
         request.onsuccess = (event) => {
             const result = event.target.result;
+            // Now we resolve with the Base64 string directly, not an array
             resolve(result ? result.icon : null);
         };
         request.onerror = (event) => {
