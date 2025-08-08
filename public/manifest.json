@@ -5,20 +5,18 @@
   "description": "A Firefox extension using React, Vite, and Tailwind CSS.",
   "action": {
     "default_popup": "index.html"
-   
   },
 
- "permissions": ["activeTab", "tabs","storage"],
-"background": {
- "scripts": ["background.js"],
-  "type": "module"
-},
+  "permissions": ["activeTab", "tabs", "storage"],
+  "background": {
+    "scripts": ["background.js"],
+    "type": "module"
+  },
 
- "content_scripts": [
+  "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "js": ["content.js"]
     }
   ]
-
 }
