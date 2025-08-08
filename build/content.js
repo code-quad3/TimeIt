@@ -1,0 +1,1 @@
+console.log("Content script loaded on:",window.location.href);setInterval(()=>{const o=location.hostname;browser.runtime.sendMessage({action:"updateActiveTab",domain:o}).catch(n=>{console.error("[content.js] Error sending message to background script:",n)})},1e3);
