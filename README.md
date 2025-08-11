@@ -1,12 +1,56 @@
-# React + Vite
+# ⏳ Time It
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Time It** is a lightweight, privacy-focused screen tracker extension that helps you understand and manage how you spend your time online.  
+It automatically logs your daily, weekly, and monthly activity, visualizes it through charts, and gives you tools like website blocking and break reminders to stay productive.
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## Expanding the ESLint configuration
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 📸 Demo
+
+---
+
+<img width="1916" height="969" alt="Screenshot 2025-08-11 182057" src="https://github.com/user-attachments/assets/b524c619-a7c1-45dc-935d-7223330e1aab" />
+<img width="1909" height="958" alt="Screenshot 2025-08-11 201325" src="https://github.com/user-attachments/assets/dbee974e-e429-4562-a508-c637912f0c21" />
+<img width="1898" height="887" alt="Screenshot 2025-08-11 183910" src="https://github.com/user-attachments/assets/a946f929-839a-4001-8f9f-07f332274fcf" />
+<img width="1870" height="847" alt="Screenshot 2025-08-11 182128" src="https://github.com/user-attachments/assets/f3090dd7-d03d-4d09-821f-687fb5f0d4bb" />
+<img width="1917" height="949" alt="Screenshot 2025-08-11 185607" src="https://github.com/user-attachments/assets/9930b982-ba16-4486-89ae-52aabe948037" />
+
+## 🚀 Features
+- 📊 **Daily, Weekly, Monthly Tracking** – View your time usage with chart visualization.
+- ⛔ **Website Blocking** – Block distracting websites.
+- ⏱ **Promotimer** – Take regular breaks for better focus.
+
+---
+
+## 🔧 Optimizations
+- 🗑 **90-Day Cleanup** – Automatically removes old tracking data.
+- 🔒 **Privacy Focused** –  Stores data locally.
+- 📈 **Scalable Storage** – Supports tracking for 1000+ websites.
+
+---
+
+## 🛠 Tech Stack
+- **Frontend:** React, Tailwind CSS
+- **Build Tool:** Vite
+- **Testing:** Jest
+
+---
+
+## 📦 Setup
+
+```bash
+
+# Clone the repository
+git clone <your-repo-url>
+
+# Install dependencies
+npm install
+
+For run and test
+about:debugging#/runtime/this-firefox
+
+# Build the extension
+npm run build
