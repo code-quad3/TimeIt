@@ -1,9 +1,10 @@
 // db.js
 
 const DB_NAME = "ExtensionDB";
-const DB_VERSION = 2; // Increment the version to trigger onupgradeneeded
+const DB_VERSION = 3; // bumped to trigger onupgradeneeded
 const FAVICON_STORE = "favicons";
 const DOMAIN_TIME_STORE = "domainTimeStore";
+const BLOCKED_DOMAIN_STORE = "blockedDomains"; // new store
 
 let db;
 
@@ -26,6 +27,10 @@ export async function openFaviconDB() {
                 tempDb.createObjectStore(DOMAIN_TIME_STORE, { keyPath: "domain" });
                 console.log(`[db.js] Store '${DOMAIN_TIME_STORE}' created.`);
             }
+            if (!tempDb.objectStoreNames.contains(BLOCKED_DOMAIN_STORE)) {
+                tempDb.createObjectStore(BLOCKED_DOMAIN_STORE, { keyPath: "domain" });
+                console.log(`[db.js] Store '${BLOCKED_DOMAIN_STORE}' created.`);
+            }
         };
 
         request.onsuccess = (event) => {
@@ -41,7 +46,9 @@ export async function openFaviconDB() {
     });
 }
 
+// -----------------
 // Favicon operations
+// -----------------
 export async function saveFavicon(domain, iconBase64) {
     if (!db) await openFaviconDB();
     return new Promise((resolve, reject) => {
@@ -49,7 +56,6 @@ export async function saveFavicon(domain, iconBase64) {
         const store = transaction.objectStore(FAVICON_STORE);
         const request = store.put({
             domain,
-            // Now we save the Base64 string directly
             icon: iconBase64,
             updatedAt: Date.now(),
         });
@@ -72,7 +78,6 @@ export async function getFavicon(domain) {
         const request = store.get(domain);
         request.onsuccess = (event) => {
             const result = event.target.result;
-            // Now we resolve with the Base64 string directly, not an array
             resolve(result ? result.icon : null);
         };
         request.onerror = (event) => {
@@ -110,7 +115,9 @@ export async function cleanupOldFavicons(days) {
     });
 }
 
+// ----------------------
 // Domain time operations
+// ----------------------
 export async function getDomainTimeEntry(domain) {
     if (!db) await openFaviconDB();
     return new Promise((resolve, reject) => {
@@ -192,3 +199,92 @@ export async function cleanupOldTimeEntries(cutoffDate) {
         };
     });
 }
+
+// -------------------------
+// Blocked domain operations
+// -------------------------
+export async function blockDomain(domain) {
+    if (!db) await openFaviconDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction([BLOCKED_DOMAIN_STORE], "readwrite");
+        const store = tx.objectStore(BLOCKED_DOMAIN_STORE);
+        const request = store.put({ domain, blockedAt: Date.now() });
+        request.onsuccess = () => {
+            console.log(`[db.js] Blocked domain: ${domain}`);
+            resolve();
+        };
+        request.onerror = (event) => {
+            console.error(`[db.js] Failed to block domain:`, event.target.error);
+            reject(event.target.error);
+        };
+    });
+}
+
+export async function unblockDomain(domain) {
+    if (!db) await openFaviconDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction([BLOCKED_DOMAIN_STORE], "readwrite");
+        const store = tx.objectStore(BLOCKED_DOMAIN_STORE);
+        const request = store.delete(domain);
+        request.onsuccess = () => {
+            console.log(`[db.js] Unblocked domain: ${domain}`);
+            resolve();
+        };
+        request.onerror = (event) => {
+            console.error(`[db.js] Failed to unblock domain:`, event.target.error);
+            reject(event.target.error);
+        };
+    });
+}
+
+export async function isDomainBlocked(domain) {
+    if (!db) await openFaviconDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction([BLOCKED_DOMAIN_STORE], "readonly");
+        const store = tx.objectStore(BLOCKED_DOMAIN_STORE);
+        const request = store.get(domain);
+        request.onsuccess = (event) => resolve(!!event.target.result);
+        request.onerror = (event) => reject(event.target.error);
+    });
+}
+
+export async function getAllBlockedDomains() {
+    if (!db) await openFaviconDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction([BLOCKED_DOMAIN_STORE], "readonly");
+        const store = tx.objectStore(BLOCKED_DOMAIN_STORE);
+        const request = store.getAll();
+        request.onsuccess = (event) => resolve(event.target.result || []);
+        request.onerror = (event) => reject(event.target.error);
+    });
+}
+
+export async function clearAllData() {
+    if (!db) await openFaviconDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(
+            [FAVICON_STORE, DOMAIN_TIME_STORE, BLOCKED_DOMAIN_STORE],
+            "readwrite"
+        );
+
+        transaction.oncomplete = () => {
+            console.log("[db.js] All IndexedDB data cleared successfully.");
+            resolve();
+        };
+
+        transaction.onerror = (event) => {
+            console.error("[db.js] Failed to clear IndexedDB data:", event.target.error);
+            reject(event.target.error);
+        };
+
+        const faviconStore = transaction.objectStore(FAVICON_STORE);
+        faviconStore.clear();
+
+        const domainTimeStore = transaction.objectStore(DOMAIN_TIME_STORE);
+        domainTimeStore.clear();
+
+        const blockedStore = transaction.objectStore(BLOCKED_DOMAIN_STORE);
+        blockedStore.clear();
+    });
+}
+

@@ -7,7 +7,10 @@
     "default_popup": "index.html"
   },
 
-  "permissions": ["activeTab", "tabs", "storage"],
+  "permissions": ["activeTab", "tabs", "storage"
+      ,"webRequest",
+    "webRequestBlocking"
+],
   "background": {
     "scripts": ["background.js"],
     "type": "module"
@@ -19,4 +22,10 @@
       "js": ["content.js"]
     }
   ]
+,
+
+  "icons":{
+    "32":"logo32.svg"
+
+  }
 }

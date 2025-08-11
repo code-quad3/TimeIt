@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import FlipCard from "../components/FlipCard";
+import { ThemeContext } from "../context/ThemeContext";
 
 function formatTimeParts(seconds) {
   const hrs = Math.floor(seconds / 3600);
@@ -12,16 +13,13 @@ function formatTimeParts(seconds) {
 
 export default function StatsPage() {
   const [todaySeconds, setTodaySeconds] = useState(0);
+  const { darkMode } = useContext(ThemeContext);
 
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
 
     const fetchTime = async () => {
-      // Get the entire timeData object
       const data = await browser.runtime.sendMessage({ action: "getTime" });
-      
-      // Access the correct nested property for today's time
-      // The new structure is timeData.daily[today]
       setTodaySeconds(data.daily[today] || 0);
     };
 
@@ -33,7 +31,11 @@ export default function StatsPage() {
   const { hours, minutes } = formatTimeParts(todaySeconds);
 
   return (
-    <div className="text-center mt-4">
+    <div
+      className={`text-center mt-4 transition-colors duration-300 ${
+        darkMode ? "text-white" : "text-black"
+      }`}
+    >
       <h2 className="text-lg font-bold mb-4">Total Time Spent Today</h2>
       <div className="flex justify-center gap-4">
         <FlipCard value={hours} />

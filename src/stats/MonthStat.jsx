@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import {
   LineChart,
   Line,
@@ -8,40 +8,41 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from 'recharts';
+} from "recharts";
+import { ThemeContext } from "../context/ThemeContext";
 
-// Helper function to format seconds into minutes for better chart readability
+// Helper: seconds → minutes
 const secondsToMinutes = (seconds) => Math.floor(seconds / 60);
 
-// This function formats the raw daily data for the last 30 days for the chart
-const formatMonthlyData = (dailyTimeData) => {
+// Helper: Format daily data for the last 30 days
+const formatDailyData = (dailyTimeData) => {
   const chartData = [];
   const today = new Date();
 
-  // Loop through the last 30 days (from today backwards)
+  // Show the last 30 days of data
   for (let i = 29; i >= 0; i--) {
     const day = new Date(today);
     day.setDate(today.getDate() - i);
     const dateString = day.toISOString().split("T")[0];
-    // For a 30-day chart, using a short date format is better than day names
-    const shortDate = day.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+    const dailySeconds = dailyTimeData[dateString] || 0;
 
-    // Get the time for this day, or default to 0 if no data exists
-    const timeInSeconds = dailyTimeData[dateString] || 0;
-    const timeInMinutes = secondsToMinutes(timeInSeconds);
+    // Example: "Aug 11" instead of "08-11"
+    const label = day.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
 
     chartData.push({
-      name: shortDate,
-      // The `dataKey` in the chart component will map to this property
-      monthly: timeInMinutes,
+      name: label, // short day label
+      daily: secondsToMinutes(dailySeconds),
     });
   }
 
   return chartData;
 };
 
-// The MonthStat component contains all the UI and logic for the monthly chart
 export function MonthStat() {
+  const { darkMode } = useContext(ThemeContext);
   const [timeData, setTimeData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -50,7 +51,6 @@ export function MonthStat() {
     const fetchTimeData = async () => {
       try {
         setIsLoading(true);
-        // Fetch all the time data from the background script
         const data = await browser.runtime.sendMessage({ action: "getTime" });
         setTimeData(data);
       } catch (e) {
@@ -66,7 +66,11 @@ export function MonthStat() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen text-white">
+      <div
+        className={`flex items-center justify-center h-screen ${
+          darkMode ? "text-white" : "text-gray-900"
+        }`}
+      >
         Loading monthly statistics...
       </div>
     );
@@ -74,43 +78,84 @@ export function MonthStat() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen text-red-400">
+      <div
+        className={`flex items-center justify-center h-screen ${
+          darkMode ? "text-red-400" : "text-red-600"
+        }`}
+      >
         Error: {error}
       </div>
     );
   }
 
-  // Prepare the chart data
-  const monthlyChartData = formatMonthlyData(timeData.daily);
-  
+  // Use the new formatDailyData function
+  const dailyChartData = formatDailyData(timeData.rollingDaily);
+
   return (
-    <div className="bg-gray-900 text-white min-h-screen p-8 font-sans">
+    <div
+      className={`min-h-screen p-8 font-sans ${
+        darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+      }`}
+    >
       <div className="container mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-10">Monthly Usage Statistics</h1>
-        
-        <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
-          <h2 className="text-xl font-semibold mb-6 text-center text-amber-500">Daily Usage (Last 30 Days)</h2>
-          
+        <h1 className="text-3xl font-bold text-center mb-10">
+          Monthly Usage Statistics
+        </h1>
+
+        <div
+          className={`p-6 rounded-lg shadow-xl ${
+            darkMode ? "bg-gray-800" : "bg-gray-100"
+          }`}
+        >
+          <h2
+            className={`text-xl font-semibold mb-6 text-center ${
+              darkMode ? "text-amber-500" : "text-amber-600"
+            }`}
+          >
+            Daily Usage (Last 30 Days)
+          </h2>
+
           <ResponsiveContainer width="100%" height={300}>
             <LineChart
-              data={monthlyChartData}
+              data={dailyChartData}
               margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#4a5568" />
-              <XAxis dataKey="name" stroke="#cbd5e0" />
-              <YAxis 
-                label={{ value: 'Minutes', angle: -90, position: 'insideLeft', fill: '#cbd5e0' }} 
-                stroke="#cbd5e0" 
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke={darkMode ? "#4a5568" : "#d1d5db"}
+              />
+              <XAxis
+                dataKey="name"
+                type="category"
+                stroke={darkMode ? "#cbd5e0" : "#374151"}
+                tick={{ fontSize: 12 }}
+                interval={0} // show all days
+                angle={-45}
+                textAnchor="end"
+              />
+              <YAxis
+                label={{
+                  value: "Minutes",
+                  angle: -90,
+                  position: "insideLeft",
+                  fill: darkMode ? "#cbd5e0" : "#374151",
+                }}
+                stroke={darkMode ? "#cbd5e0" : "#374151"}
               />
               <Tooltip
-                contentStyle={{ backgroundColor: '#2d3748', border: '1px solid #4a5568' }}
-                itemStyle={{ color: '#cbd5e0' }}
+                contentStyle={{
+                  backgroundColor: darkMode ? "#2d3748" : "#f9fafb",
+                  border: `1px solid ${darkMode ? "#4a5568" : "#d1d5db"}`,
+                }}
+                itemStyle={{
+                  color: darkMode ? "#cbd5e0" : "#111827",
+                }}
               />
-              <Legend wrapperStyle={{ paddingTop: '20px' }} />
-              <Line 
-                type="monotone" 
-                dataKey="monthly" // The dataKey now corresponds to the monthly data
-                stroke="#82ca9d" 
+              <Legend wrapperStyle={{ paddingTop: "20px" }} />
+              <Line
+                type="monotone"
+                dataKey="daily"
+                stroke="#82ca9d"
                 activeDot={{ r: 8 }}
                 strokeWidth={2}
               />
