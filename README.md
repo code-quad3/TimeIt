@@ -8,7 +8,7 @@ It automatically logs your daily, weekly, and monthly activity, visualizes it th
 
 ---
 
-## 📸 Demo
+## 📸 Screenshots
 
 ---
 
